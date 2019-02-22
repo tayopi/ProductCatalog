@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProductCatalog.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -10,21 +11,48 @@ namespace ProductCatalog.Controllers
     {
         public ActionResult Index()
         {
-            return View();
+            var model = from p in _products select p;
+
+            return View(model);
         }
 
-        public ActionResult About()
+        public ActionResult Create()
         {
-            ViewBag.Message = "Your application description page.";
-
             return View();
         }
 
-        public ActionResult Contact()
+        [HttpPost]
+        public ActionResult Create(FormCollection collection)
         {
-            ViewBag.Message = "Your contact page.";
+            try
+            {
+                foreach (var item in _products)
+                {
+                    if (item.Name == collection["Name"])
+                    {
+                        ModelState.AddModelError("Name", "A product with this name already exists.");
+                        return View();
+                    }
+                }
 
-            return View();
+                var product = new Product
+                {
+                    Id = Convert.ToInt32(collection["Id"]),
+                    Name = collection["Name"],
+                    Description = collection["Description"],
+                    Quantity = Convert.ToInt32(collection["Quantity"])
+                };
+
+                _products.Add(product);
+
+                return RedirectToAction("Index");
+            }
+            catch
+            {
+                return View();
+            }
         }
+
+        static List<Product> _products = new List<Product>();
     }
 }
